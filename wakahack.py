@@ -1,69 +1,57 @@
-import json
 import argparse
-from collections import defaultdict
-import re
 import datetime
+import json
+import re
+from collections import defaultdict
 
-def matchProject(project):
-    if args.search != None:
-        if args.search.lower() in project['name'].lower():
-            projects.append({'name': project['name'], 'time': project['grand_total']['total_seconds']})
+
+def match_project(project_name):
+    if args.search is not None:
+        if args.search.lower() in project_name['name'].lower():
+            projects.append({'name': project_name['name'], 'time': project_name['grand_total']['total_seconds']})
             return True
         else:
             return False
 
-    if args.project != None:
-        return args.project == project['name']
-
-    if args.regex != None:
-        if re.match(args.regex, project['name']):
-            projects.append({'name': project['name'], 'time': project['grand_total']['total_seconds']})
+    if args.project is not None:
+        if args.project == project_name['name']:
+            projects.append({'name': project_name['name'], 'time': project_name['grand_total']['total_seconds']})
             return True
         else:
             return False
 
+    if args.regex is not None:
+        if re.match(args.regex, project_name['name']):
+            projects.append({'name': project_name['name'], 'time': project_name['grand_total']['total_seconds']})
+            return True
+        else:
+            return False
 
-    if args.all != None:
-        projects.append({'name': project['name'], 'time': project['grand_total']['total_seconds']})
+    if args.all is not None:
+        projects.append({'name': project_name['name'], 'time': project_name['grand_total']['total_seconds']})
         return True
 
-def matchDate(day):
-    project_date = datetime.datetime.strptime(day['date'], '%Y-%m-%d')
-    if args.before != None:
+
+def match_date(date):
+    project_date = datetime.datetime.strptime(date['date'], '%Y-%m-%d')
+    if args.before is not None:
         before_date = datetime.datetime.strptime(args.before, '%Y-%m-%d')
         if before_date < project_date:
             return False
 
-    if args.after != None:
+    if args.after is not None:
         after_date = datetime.datetime.strptime(args.after, '%Y-%m-%d')
         if after_date > project_date:
             return False
 
     return True
 
-intervals = (
-    ('weeks', 604800),  # 60 * 60 * 24 * 7
-    ('days', 86400),    # 60 * 60 * 24
-    ('hours', 3600),    # 60 * 60
-    ('minutes', 60),
-    ('seconds', 1),
-    )
 
-def display_time(seconds, granularity=2):
-    result = []
+def display_time(seconds):
+    """Returns time in hours and minutes format"""
+    hours, minutes = divmod(int(seconds / 60), 60)
+    return f"{hours}h {minutes}m"
 
-    for name, count in intervals:
-        value = seconds // count
-        if value:
-            seconds -= value * count
-            if value == 1:
-                name = name.rstrip('s')
-            result.append("{} {}".format(value, name))
-    return ', '.join(result[:granularity])
-
-def foundry(seconds):
-    hours, minutes= divmod(int(seconds/60), 60)
-    return str(hours) + "h " + str(minutes) + "m"
 
 parser = argparse.ArgumentParser(description='Count hours in a wakatime data dump')
 parser.add_argument('-f', '--file', metavar='file', type=open, required=True)
@@ -77,28 +65,26 @@ parser.add_argument('-ad', '--after', metavar='YYYY-MM-DD')
 
 args = parser.parse_args()
 
-inputdata = json.load(args.file)
+input_data = json.load(args.file)
 
-totaltime = 0.0
+total_time = 0.0
 projects = []
 
-for day in inputdata['days']:
-    if matchDate(day):
+for day in input_data['days']:
+    if match_date(day):
         for project in day['projects']:
-            if matchProject(project):
-                totaltime = totaltime + project['grand_total']['total_seconds']
+            if match_project(project):
+                total_time = total_time + project['grand_total']['total_seconds']
 
 c = defaultdict(int)
 for d in projects:
     c[d['name']] += d['time']
 
-projects = [{'name': name, 'time': time} for name, time in c.items()]
+# Sorting projects by time in descending order
+projects = sorted([{'name': name, 'time': time} for name, time in c.items()], key=lambda x: x['time'], reverse=True)
 
-print("Counted time: " + str(display_time(int(totaltime), 10)))
-print("PF compatable: " + str(foundry(int(totaltime))))
-if len(projects) > 1:
-    print()
-    print("Counted time from matching projects:")
+if len(projects) > 0:
+    print("Counted time from matching projects: " + display_time(total_time))
     for p in projects:
-        print("    " + p['name'] + ": " + str(display_time(int(p['time']), 10)))
+        print(f"    {p['name']}: {display_time(p['time'])}")
 exit()
