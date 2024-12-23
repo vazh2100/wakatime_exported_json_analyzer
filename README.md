@@ -14,11 +14,11 @@ section in the account settings of [Wakatime](https://wakatime.com/settings/acco
 - *date range filtering*
 
 ### Usage
-
-**All time and all projects:**
-
 ```commandline
-python wakahack.py -f wakatime4.json -a
+### All time and all projects
+
+python wakahack.py -f wakatime4.json -a`
+
 Total time: 2081h 38m
 Projects:
     everyport_front: 644h 32m
@@ -27,10 +27,11 @@ Projects:
     ...
 ```
 
-**Searched projects before this year. Display projects, languages, os, machines, editors:**
-
 ```commandline
+### Searched projects before this year. Display projects, languages, os, machines, editors
+
 python wakahack.py -f wakatime4.json -s tinkoff -bd 2024-01-01 --show=plome
+
 Total time: 23h 39m
 Projects:
     tinkoff_id_flutter: 10h 17m
@@ -57,11 +58,11 @@ Editors:
     Android Studio: 20h 50m
     Xcode: 2h 49m
 ```
-
-**Searched projects by regular expression in specific two months. Show projects and days:**
-
 ```commandline
+### Searched projects by regular expression in specific two months. Show projects and days
+
 python wakahack.py -f wakatime4.json -r .*otlin.* -ad 2024-11-01 -bd 2024-12-31 -show pd
+
 Total time: 65h 12m
 Projects:
     KotlinPRO: 64h 3m
@@ -76,11 +77,11 @@ Days:
     2024-11-07: 6h 10m
     ...
 ```
-
-**Searched project by its exact name all time this year and show days as bars:**
-
 ```bash
+### Searched project by its exact name all time this year and show days as bars
+
 python wakahack.py -f wakatime4.json -p "GeoEventApplication" -ad 2024-01-01 -show pb
+
 Total time: 89h 21m
 Projects:
     GeoEventApplication: 89h 21m
@@ -104,10 +105,11 @@ Days:
     2024-12-13:  0h 7m
 ```
 
-**Search all time and all projects and show only operating systems, machines and editors:**
-
 ```commandline
+### Search all time and all projects and show only operating systems, machines and editors
+
 python wakahack.py -f wakatime4.json -a -show ome
+
 Total time: 2081h 38m
 Operating systems:
     Linux: 2025h 51m
