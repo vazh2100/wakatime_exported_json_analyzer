@@ -14,8 +14,8 @@ search.add_argument('-p', '--project', metavar='<name>')
 search.add_argument('-r', '--regex', metavar='<regex>')
 parser.add_argument('-bd', '--before', metavar='YYYY-MM-DD')
 parser.add_argument('-ad', '--after', metavar='YYYY-MM-DD')
-parser.add_argument("-show", "--show", metavar="plome", default="p",
-                    help="output options: p - projects, l - languages, o - os, m - machines e - editors, ")
+parser.add_argument("-show", "--show", metavar="plomedb", default="p",
+                    help="output options: p - projects, l - languages, o - os, m - machines e - editors, d - days, b - days as bars")
 
 ##----Variables----##
 args = parser.parse_args()
@@ -25,12 +25,15 @@ showL = "l" in args.show
 showO = "o" in args.show
 showM = "m" in args.show
 showE = "e" in args.show
+showD = "d" in args.show
+showB = "b" in args.show
 total_time = 0.0
 projects_dict = defaultdict(int)
 languages_dict = defaultdict(int)
 operating_systems_dict = defaultdict(int)
 editors_dict = defaultdict(int)
 machines_dict = defaultdict(int)
+days_dict = defaultdict(int)
 
 
 ##----Functions----##
@@ -80,8 +83,11 @@ def add_machine(machine):
     machines_dict[machine['name']] += machine['total_seconds']
 
 
+def add_day(day, project):
+    days_dict[day['date']] += project['grand_total']['total_seconds']
+
+
 def display_time(seconds):
-    """Returns time in hours and minutes format"""
     hours, minutes = divmod(int(seconds / 60), 60)
     return f"{hours}h {minutes}m"
 
@@ -94,6 +100,19 @@ def print_summary(title: str, data: list[tuple[any, int]]):
         print()
 
 
+def print_summary_with_bars(title: str, data: list[tuple[any, int]]):
+    if len(data) == 0:
+        return
+    max_value = 86400
+    max_bar_length = 144
+    print(title + ":")
+    for item in data:
+        bar_length = int((item[1] / max_value) * max_bar_length) if max_value > 0 else 0
+        bar = '■' * bar_length
+        print(f"    {item[0]}: {bar} {display_time(item[1])}")
+    print()
+
+
 ##----Execution Section----##
 def main():
     # Processing
@@ -102,6 +121,8 @@ def main():
             for project in day['projects']:
                 if match_project(project):
                     add_project(project)
+                    if showD or showB:
+                        add_day(day, project)
                     if showL:
                         for language in project['languages']:
                             add_language(language)
@@ -119,6 +140,12 @@ def main():
     if showP:
         projects = sorted(projects_dict.items(), key=lambda x: x[1], reverse=True)
         print_summary("Projects", projects)
+    if showD:
+        days = list(days_dict.items())
+        print_summary("Days", days)
+    if showB:
+        days = list(days_dict.items())
+        print_summary_with_bars("Days", days)
     if showL:
         languages = sorted(languages_dict.items(), key=lambda x: x[1], reverse=True)
         print_summary("Languages", languages)
